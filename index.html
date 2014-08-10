@@ -26,7 +26,7 @@
 	</head>
 	<body>
 		
-		<div id="info"><a href="http://threejs.org" target="_blank">three.js</a> webgl - typed arrays - nearest neighbour for 500,000 sprites</div>
+	<div id="info"><a href="http://threejs.org" target="_blank">three.js</a> webgl - typed arrays - nearest neighbour for <span id="sprite-count">???</span> sprites</div>
 		
 		<script src="three.min.js"></script>
 		<script src="TypedArrayUtils.js"></script>
@@ -68,6 +68,9 @@
 
 		</script>
 		<script>		
+			function addCommas (num) {
+				return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+			}
 		
 			var camera, scene, renderer;
 			var geometry, material, mesh;
@@ -75,7 +78,7 @@
 
 			var objects = [];
 
-			var amountOfParticles = 500000, maxDistance = Math.pow(120, 2);
+			var amountOfParticles = 5e5, maxDistance = Math.pow(120, 2);
 			var positions, alphas, particles, _particleGeom
 
 			var clock = new THREE.Clock();
@@ -86,7 +89,8 @@
 			
 			function init() {
 
-			    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000000);
+				document.getElementById('sprite-count').innerText = addCommas (amountOfParticles);
+				camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000000);
 
 				scene = new THREE.Scene();
 
