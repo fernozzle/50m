@@ -8,7 +8,7 @@ var controls;
 
 var objects = [];
 
-var amountOfParticles = 5e5, maxDistance = Math.pow(120, 2);
+var particleCount = 5e5, maxDistance = Math.pow(120, 2);
 var positions, alphas, particles, _particleGeom
 
 var clock = new THREE.Clock();
@@ -19,7 +19,7 @@ var instructions = document.getElementById( 'instructions' );
 
 function init() {
 
-	document.getElementById('sprite-count').innerText = addCommas (amountOfParticles);
+	document.getElementById('sprite-count').innerText = addCommas (particleCount);
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000000);
 
 	scene = new THREE.Scene();
@@ -79,12 +79,12 @@ function init() {
 
 		position: {
 			itemSize: 3,
-			array: new Float32Array( amountOfParticles * 3 )
+			array: new Float32Array( particleCount * 3 )
 		},
 
 		alpha: {
 			itemSize: 1,
-			array: new Float32Array( amountOfParticles )
+			array: new Float32Array( particleCount )
 		}
 
 	};
@@ -94,11 +94,13 @@ function init() {
 	particles = new THREE.PointCloud( _particleGeom, pointShaderMaterial );
 	particles.dynamic = true;
 
-	for (var x = 0; x < amountOfParticles; x++) {
+	var printEvery = 1e4;
+	for (var x = 0; x < particleCount; x++) {
 		positions[ x * 3 + 0 ] = Math.random() * 1000;
 		positions[ x * 3 + 1 ] = Math.random() * 1000;
 		positions[ x * 3 + 2 ] = Math.random() * 1000;
 		alphas[x] = 1.0;
+		if (x % printEvery === 0) console.log( 'Set particle ' + x );
 	}
 
 
