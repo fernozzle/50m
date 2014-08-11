@@ -96,20 +96,21 @@ function init() {
 
 	var printEvery = 1e4;
 	for (var x = 0; x < particleCount; x++) {
-		positions[ x * 3 + 0 ] = Math.random() * 1000;
-		positions[ x * 3 + 1 ] = Math.random() * 1000;
-		positions[ x * 3 + 2 ] = Math.random() * 1000;
+		do {
+			positions[ x * 3 + 0 ] = Math.random() * 1000;
+			positions[ x * 3 + 1 ] = Math.random() * 1000;
+			positions[ x * 3 + 2 ] = Math.random() * 1000;
+		} while (Math.pow(positions [x * 3 + 0] - 500, 2) + Math.pow(positions [x * 3 + 1] - 500, 2) + Math.pow(positions [x * 3 + 2] - 500, 2) > 250000);
 		alphas[x] = 1.0;
 		if (x % printEvery === 0) console.log( 'Set particle ' + x );
 	}
 
 
-	var measureStart = new Date().getTime();
+	var measureStart = Date.now();
 
-	// creating the kdtree takes a lot of time to execute, in turn the nearest neighbour search will be much faster
+	console.log('Building kd-tree...');
 	kdtree = new THREE.TypedArrayUtils.Kdtree( positions, distanceFunction, 3 );
-
-	console.log('TIME building kdtree', new Date().getTime() - measureStart);
+	console.log('Built kd-tree in ' + ((Date.now() - measureStart) / 1000).toFixed(3) + ' seconds');
 
 	// display particles after the kd-tree was generated and the sorting of the positions-array is done
 	scene.add(particles);
