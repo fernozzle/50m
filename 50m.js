@@ -21,15 +21,15 @@ function init() {
 
 	document.getElementById('sprite-count').innerText = addCommas (particleCount);
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000000);
+	camera.position.set(-1000, 2000, -1000);
 
 	scene = new THREE.Scene();
 
 	controls = new THREE.FirstPersonControls( camera );
-	controls.movementSpeed = 100;
+	controls.movementSpeed = 500;
 	controls.lookSpeed = 0.1;
 
-	var materials = [
-
+	var materials = [ 
 		new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/cube/skybox/px.jpg' ) } ), // right
 		new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/cube/skybox/nx.jpg' ) } ), // left
 		new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/cube/skybox/py.jpg' ) } ), // top
@@ -94,15 +94,34 @@ function init() {
 	particles = new THREE.PointCloud( _particleGeom, pointShaderMaterial );
 	particles.dynamic = true;
 
+	var noise = new Noise(1);
+	var scale = 0.001;
+	function getDistance(x, y, z) {
+		x *= scale;
+		y *= scale;
+		z *= scale;
+		var value = 0;
+		for (var level = 0; level < 4; level++) {
+			var twoPow = Math.pow(2, level);
+			value += noise.simplex3(x * twoPow, y * twoPow, z * twoPow) / twoPow;
+		}
+		return value - 0.5;
+	}
+
 	var printEvery = 1e4;
-	for (var x = 0; x < particleCount; x++) {
+	for (var i = 0; i < particleCount; i++) {
+		var x, y, z;
 		do {
-			positions[ x * 3 + 0 ] = Math.random() * 1000;
-			positions[ x * 3 + 1 ] = Math.random() * 1000;
-			positions[ x * 3 + 2 ] = Math.random() * 1000;
-		} while (Math.pow(positions [x * 3 + 0] - 500, 2) + Math.pow(positions [x * 3 + 1] - 500, 2) + Math.pow(positions [x * 3 + 2] - 500, 2) > 250000);
-		alphas[x] = 1.0;
-		if (x % printEvery === 0) console.log( 'Set particle ' + x );
+			x = Math.random() * 1000;
+			y = Math.random() * 1000;
+			z = Math.random() * 1000;
+		} while (getDistance(x, y, z) < 0);
+		positions[i * 3 + 0] = x;
+		positions[i * 3 + 1] = y;
+		positions[i * 3 + 2] = z;
+
+		alphas[i] = 1.0;
+		if (i % printEvery === 0) console.log('Set particle ' + i);
 	}
 
 
@@ -133,47 +152,11 @@ function animate() {
 
 	requestAnimationFrame( animate );
 
-	//
-	displayNearest(camera.position);
-
 	controls.update( clock.getDelta() )
 
 	renderer.render( scene, camera );
 
 }
-
-function displayNearest(position) {
-
-	// take the nearest 200 around him. distance^2 'cause we use the manhattan distance and no square is applied in the distance function
-	var imagePositionsInRange = kdtree.nearest([position.x, position.y, position.z], 100, maxDistance);
-
-	// We combine the nearest neighbour with a view frustum. Doesn't make sense if we change the sprites not in our view... well maybe it does. Whatever you want.
-	var _frustum = new THREE.Frustum();
-	var _projScreenMatrix = new THREE.Matrix4();
-	camera.matrixWorldInverse.getInverse( camera.matrixWorld );
-
-	_projScreenMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse );
-	_frustum.setFromMatrix( _projScreenMatrix );
-
-	for ( i = 0, il = imagePositionsInRange.length; i < il; i ++ ) {
-		var object = imagePositionsInRange[i];
-		var objectPoint = new THREE.Vector3(0,0,0);
-		objectPoint.x = object[0].obj[0];
-		objectPoint.y = object[0].obj[1];
-		objectPoint.z = object[0].obj[2];
-
-		if (_frustum.containsPoint(objectPoint)){
-
-			var objectIndex = object[0].pos;
-
-			// set the alpha according to distance
-			alphas[ objectIndex ] = 1.0 / maxDistance * object[1];
-			// update the attribute
-			_particleGeom.attributes.alpha.needsUpdate = true;
-		}
-	}
-}
-
 
 init();
 animate();
