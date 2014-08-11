@@ -95,43 +95,48 @@ function init() {
 	particles.dynamic = true;
 
 	var noise = new Noise(1);
-	var scale = 0.001;
 	function getDistance(x, y, z) {
-		x *= scale;
-		y *= scale;
-		z *= scale;
+		x += 5;
+		y += 5;
+		z += 5;
 		var value = 0;
-		for (var level = 0; level < 4; level++) {
+		for (var level = 0; level < 7; level++) {
 			var twoPow = Math.pow(2, level);
 			value += noise.simplex3(x * twoPow, y * twoPow, z * twoPow) / twoPow;
 		}
-		return value - 0.5;
+		return value + 0.5;
+	}
+	function getNormal(x, y, z, distance) {
+		var delta = 0.01;
+		var normal = new THREE.Vector3(
+			getDistance(x + delta, y, z) - distance,
+			getDistance(x, y + delta, z) - distance,
+			getDistance(x, y, z + delta) - distance
+		);
+		normal.normalize();
+		return normal;
 	}
 
 	var printEvery = 1e4;
 	for (var i = 0; i < particleCount; i++) {
-		var x, y, z;
+		var x, y, z, distance;
 		do {
-			x = Math.random() * 1000;
-			y = Math.random() * 1000;
-			z = Math.random() * 1000;
-		} while (getDistance(x, y, z) < 0);
-		positions[i * 3 + 0] = x;
-		positions[i * 3 + 1] = y;
-		positions[i * 3 + 2] = z;
+			x = Math.random();
+			y = Math.random();
+			z = Math.random();
+			distance = getDistance(x, y, z);
+		} while (distance > 0);
 
-		alphas[i] = 1.0;
+		positions[i * 3 + 0] = x * 1000;
+		positions[i * 3 + 1] = y * 1000;
+		positions[i * 3 + 2] = z * 1000;
+
+		var sunDirection = new THREE.Vector3(0, 1, 0);
+		alphas[i] = Math.pow((getNormal(x, y, z, distance).dot(sunDirection) + 1) / 2, 4);
+
 		if (i % printEvery === 0) console.log('Set particle ' + i);
 	}
 
-
-	var measureStart = Date.now();
-
-	console.log('Building kd-tree...');
-	kdtree = new THREE.TypedArrayUtils.Kdtree( positions, distanceFunction, 3 );
-	console.log('Built kd-tree in ' + ((Date.now() - measureStart) / 1000).toFixed(3) + ' seconds');
-
-	// display particles after the kd-tree was generated and the sorting of the positions-array is done
 	scene.add(particles);
 
 	window.addEventListener( 'resize', onWindowResize, false );

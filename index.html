@@ -42,7 +42,7 @@
 
 			void main() {
 			
-				vAlpha = 1.0 - alpha;
+				vAlpha = alpha;
 				
 				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
 
@@ -63,7 +63,7 @@
 			void main() {
 
 				gl_FragColor = texture2D(tex1, gl_PointCoord);
-				gl_FragColor.r = (1.0 - gl_FragColor.r) * vAlpha + gl_FragColor.r;
+				gl_FragColor += vec4(1., 1., 1., 0.) * vAlpha;
 
 			}
 
