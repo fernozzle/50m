@@ -36,13 +36,13 @@
 			
 			//uniform float zoom;
 		
-			attribute float alpha;
+			attribute vec3 color;
 
-			varying float vAlpha;
+			varying vec3 vColor;
 
 			void main() {
 			
-				vAlpha = alpha;
+				vColor = color;
 				
 				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
 
@@ -58,11 +58,11 @@
 
 			uniform sampler2D tex1;
 
-			varying float vAlpha;
+			varying vec3 vColor;
 
 			void main() {
 
-				vec3 color = vec3(1., 1., 1.) * vAlpha;
+				vec3 color = vColor;
 				gl_FragColor = vec4(color, 1.);
 
 			}

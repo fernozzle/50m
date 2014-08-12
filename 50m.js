@@ -9,7 +9,7 @@ var controls;
 var objects = [];
 
 var particleCount = 5e5, maxDistance = Math.pow(120, 2);
-var positions, alphas, particles, _particleGeom
+var positions, colors, particles, _particleGeom
 
 var clock = new THREE.Clock();
 
@@ -61,7 +61,7 @@ function init() {
 			zoom: { type: 'f', value: 9.0 },
 		},
 		attributes: {
-			alpha: { type: 'f', value: null },
+			color: { type: 'v3', value: null },
 		},
 		vertexShader:   document.getElementById( 'vertexshader' ).textContent,
 		fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
@@ -82,17 +82,16 @@ function init() {
 			array: new Float32Array( particleCount * 3 )
 		},
 
-		alpha: {
-			itemSize: 1,
-			array: new Float32Array( particleCount )
+		color: {
+			itemSize: 3,
+			array: new Float32Array( particleCount * 3 )
 		}
 
 	};
 	positions = _particleGeom.attributes.position.array;
-	alphas = _particleGeom.attributes.alpha.array;
+	colors = _particleGeom.attributes.color.array;
 
 	particles = new THREE.PointCloud( _particleGeom, pointShaderMaterial );
-	particles.dynamic = true;
 
 	var noise = new Noise(1);
 	function getDistance(x, y, z) {
@@ -118,7 +117,7 @@ function init() {
 	}
 
 	var printEvery = 1e4;
-	for (var i = 0; i < particleCount; i++) {
+	for (var i = 0; i < particleCount - 1; i++) {
 		var x, y, z, distance;
 		do {
 			x = Math.random();
@@ -131,8 +130,14 @@ function init() {
 		positions[i * 3 + 1] = y * 1000;
 		positions[i * 3 + 2] = z * 1000;
 
-		var sunDirection = new THREE.Vector3(0, 1, 0);
-		alphas[i] = Math.pow((getNormal(x, y, z, distance).dot(sunDirection) + 1) / 2, 4);
+		var ambient = 1;
+		var normal = getNormal(x, y, z, distance);
+		var sun     = Math.pow((normal.dot(new THREE.Vector3(-1,  0.5, 1.0).normalize()) + 1) / 2, 4);
+		var horizon = Math.pow((normal.dot(new THREE.Vector3( 1,  0.0, 0.5).normalize()) + 1) / 2, 4);
+		var ground  = Math.pow((normal.dot(new THREE.Vector3( 0, -1.0, 0.0).normalize()) + 1) / 2, 4);
+		colors[i * 3 + 0] = Math.sqrt(ambient * 0.06 + sun * 2.0 + horizon * 0.10 + ground * 0.15);
+		colors[i * 3 + 1] = Math.sqrt(ambient * 0.07 + sun * 1.6 + horizon * 0.04 + ground * 0.15);
+		colors[i * 3 + 2] = Math.sqrt(ambient * 0.10 + sun * 0.8 + horizon * 0.02 + ground * 0.15);
 
 		if (i % printEvery === 0) console.log('Set particle ' + i);
 	}
